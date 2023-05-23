@@ -1,6 +1,6 @@
 # Langflow
 
-**TODO: Add description**
+Parser and interpreter for a simple visual programming language.
 
 ## Installation
 
