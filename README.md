@@ -1,6 +1,6 @@
 # Langflow
 
-Parser and interpreter for a simple visual programming language.
+Parser and interpreter for a simple visual programming language. It is meant to be a little runtime language server API for macro tooling.
 
 ## Installation
 

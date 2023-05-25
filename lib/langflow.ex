@@ -20,7 +20,12 @@ defmodule Langflow do
   end
 
   def start(_type, _args) do
-    Task.start(fn -> runProgram("addition.txt") end)
+    IO.puts("Starting Langflow...")
+    IO.puts("Enter the name of the file you want to run:")
+    res = IO.read(:stdio, :line)
+    fileName = String.replace(res, "\n", "") <> ".lnf"
+
+    Task.start(fn -> runProgram(fileName) end)
   end
 
   def runProgram(file) do
