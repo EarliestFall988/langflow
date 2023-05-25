@@ -1,5 +1,16 @@
 
-//first example
+//adding values
 add 1 2
-//second example
-add 3 4
+
+//multiplying two values
+mul 3 4
+
+//dividing two values
+div 25 5 
+
+//running complex operation
+add 3 add 4 5
+
+//doing some more math operations
+mul 4 add 4 div 2 1
+

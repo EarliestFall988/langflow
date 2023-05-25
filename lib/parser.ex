@@ -21,61 +21,100 @@ defmodule Parser do
     end
   end
 
-  def constructSyntaxTree({:ok, data}) do
-    try do
-      result =
-        data
-        |> Enum.map(fn line ->
-          case line do
-            [op, arg1, arg2] ->
-              case op do
-                "add" ->
-                  {:ok, {:add, arg1, arg2}}
+  def recursiveCreateTree([op, arg1, arg2]) do
+    case checkOperator(op) do
+      true ->
+        {:ok, {String.to_atom(op), recursiveCreateTree(arg1), recursiveCreateTree(arg2)}}
 
-                "sub" ->
-                  {:ok, {:sub, arg1, arg2}}
-
-                "mul" ->
-                  {:ok, {:mul, arg1, arg2}}
-
-                "div" ->
-                  {:ok, {:div, arg1, arg2}}
-
-                _ ->
-                  {:error, "invalid operation"}
-              end
-
-            _ ->
-              {:error, "invalid syntax"}
-          end
-        end)
-
-      invalidSyntax =
-        Enum.filter(result, fn line ->
-          line == {:error, "invalid syntax"}
-        end)
-
-      invalidOperation =
-        Enum.filter(result, fn line ->
-          line == {:error, "invalid operation"}
-        end)
-
-      case {invalidSyntax, invalidOperation} do
-        {[], []} ->
-          {:ok, result}
-
-        {[], _} ->
-          {:error, "invalid operation"}
-
-        {_, []} ->
-          {:error, "invalid syntax"}
-
-        {_, _} ->
-          {:error, "invalid"}
-      end
-    rescue
-      _ -> {:error, "error constructing syntax tree"}
+      false ->
+        {:error, "invalid operation"}
     end
+  end
+
+  def recursiveCreateTree(arg) do
+    String.to_integer(arg)
+  end
+
+  def checkOperator(op) do
+    case op do
+      "add" -> true
+      "sub" -> true
+      "mul" -> true
+      "div" -> true
+      "mod" -> true
+      _ -> false
+    end
+  end
+
+  def nestGroups(data) do
+    # IO.inspect(data)
+
+    groupItems(Enum.reverse(data), [], [])
+    |> Enum.at(0)
+
+    # |> IO.inspect()
+  end
+
+  def groupItems(data, group, res) do
+    case data do
+      [] ->
+        res
+
+      [head | tail] ->
+        if checkOperator(head) do
+          newGroup = [head] ++ group
+
+          groupItems(tail, [], [newGroup ++ res])
+        else
+          groupItems(tail, [head] ++ group, res)
+        end
+    end
+  end
+
+  def constructSyntaxTree({:ok, data}) do
+    # try do
+
+    res =
+      data
+      |> Enum.map(fn line ->
+        case line do
+          [op, arg1, arg2] ->
+            recursiveCreateTree([op, arg1, arg2])
+
+          _ ->
+            {:error, "invalid syntax"}
+        end
+      end)
+
+    {:ok, res}
+
+    # invalidSyntax =
+    #   Enum.filter(result, fn line ->
+    #     line == {:error, "invalid syntax"}
+    #   end)
+
+    # invalidOperation =
+    #   Enum.filter(result, fn line ->
+    #     line == {:error, "invalid operation"}
+    #   end)
+
+    # case {invalidSyntax, invalidOperation} do
+    #   {[], []} ->
+    #     {:error, result}
+
+    #   {[], _} ->
+    #     {:error, "invalid operation"}
+
+    #   {_, []} ->
+    #     {:error, "invalid syntax"}
+
+    #   {_, _} ->
+    #     {:error, "invalid"}
+    # end
+
+    # rescue
+    #   _ -> {:error, "error constructing syntax tree"}
+    # end
   end
 
   def findInvalid(data, location, res) do
@@ -94,11 +133,19 @@ defmodule Parser do
     end
   end
 
-  @spec parse(String.t()) :: {:ok, list} | {:error, String.t()}
   def parse(file) do
     case tokenizeString(file) do
       {:ok, data} ->
-        constructSyntaxTree({:ok, data})
+        res =
+          Enum.map(data, fn x ->
+            if Enum.count(x) > 3 do
+              nestGroups(x)
+            else
+              x
+            end
+          end)
+
+        constructSyntaxTree({:ok, res})
 
       {:error, reason} ->
         {:error, reason}

@@ -1,5 +1,6 @@
 defmodule Langflow do
   alias Parser, as: Parser
+  alias SimpleInterpreter, as: SimpleInterpreter
 
   @moduledoc """
   Documentation for `Langflow`.
@@ -19,28 +20,41 @@ defmodule Langflow do
   end
 
   def start(_type, _args) do
-    IO.puts("starting")
-    # some more stuff
-    Task.start(fn -> IO.puts("\n\n---------Result----------\n" <> openFile("addition.txt")) end)
+    Task.start(fn -> runProgram("addition.txt") end)
+  end
+
+  def runProgram(file) do
+    IO.puts("Running #{file}...")
+    IO.puts("\n\n\---------Results----------\n\n")
+
+    case openFile(file) do
+      {:ok, result} ->
+        Parser.parse(result)
+        |> SimpleInterpreter.interpretTree()
+        |> IO.inspect()
+
+        :ok
+
+      {:error, reason} ->
+        IO.puts("ERR: #{reason}")
+        # IO.inspect(reason)
+
+        :error
+    end
   end
 
   def openFile(filename) do
     case File.read("sample scripts/#{filename}") do
       {:ok, file} ->
-        case Parser.parse(file) do
-          {:ok, result} ->
-            IO.inspect(result)
-            "OK"
-
-          {:error, reason} ->
-            IO.inspect(reason)
-            exit(reason)
-        end
+        # case Parser.parse(file) do
+        #   {:ok, result} ->
+        #     {:ok, result}
+        # end
+        # IO.inspect(file)
+        {:ok, file}
 
       {:error, reason} ->
-        # IO.puts("ERR: #{reason}")
-        IO.inspect(reason)
-        exit(reason)
+        {:error, reason}
     end
   end
 end
